@@ -3,12 +3,12 @@ from bs4 import BeautifulSoup
 import requests
 
 # this is the search term that the user will enter
-# search = input("Enter search term: ").replace(" ", "-")
+# searchText = input("Enter search term: ").replace(" ", "-")
 
 # this is the search term used for testing
-search = "super mario bros wonder".replace(" ", "-")
+searchText = "super mario bros wonder".replace(" ", "-")
 
-url = f"https://www.kleinanzeigen.de/s-{search}/k0"
+url = f"https://www.kleinanzeigen.de/s-{searchText}/k0"
 
 # sets Headers for the request (User-Agent), so the request is not blocked. (from https://github.com/tax0r/Ebay-Kleinanzeigen-Scraper/blob/master/Ebay-Kleinanzeigen%20Scraper/main.py)
 headers = {
@@ -26,8 +26,9 @@ postings = postingData.find_all("li", class_="ad-listitem")  # a posting has the
 
 # Loop through all the postings on the page
 for posting in postings:
-
     negotiable = False                                        # set the default value for negotiable to False
+    img = "No Image"                                          # set the default value for img to "No Image"
+
 
     # if the posting is shorter than 130 (111 + buffer) characters, it is not a posting, but a visual divider (Postings are ~60k characters long)
     if len(str(posting)) < 130:  
@@ -42,7 +43,11 @@ for posting in postings:
     price = posting.find("div", class_="aditem-main--middle--price-shipping").p.text.strip().replace(" €", "")
 
     url = "https://www.kleinanzeigen.de/" + posting.find("div", class_="aditem-main--middle").h2.a.get("href")
-    # img = posting.find("div", class_="imagebox srpimagebox").img.get("src")
+
+
+    # if imagebox srpimagebox does not exist, the posting does not have an image
+    if posting.find("div", class_="imagebox srpimagebox") is not None:
+        img = posting.find("div", class_="imagebox srpimagebox").img.get("src")
 
 
     # Price can have nagotiable in it, so we need to check for that
@@ -56,3 +61,7 @@ for posting in postings:
     else:
         # If the price is not "Zu verschenken", cast the String into a double
         price = float(price)
+
+
+
+
