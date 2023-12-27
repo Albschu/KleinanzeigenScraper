@@ -1,6 +1,13 @@
 
 from bs4 import BeautifulSoup
 import requests
+import sqlite3
+from datetime import datetime
+
+
+# create a connection to the database
+connection = sqlite3.connect("data.db")
+db = connection.cursor()
 
 # this is the search term that the user will enter
 # searchText = input("Enter search term: ").replace(" ", "-")
@@ -52,8 +59,8 @@ for posting in postings:
 
     # Price can have nagotiable in it, so we need to check for that
     if "VB" in price:
-        negotiable = True   # set negotiable to True if it is named
-        price = price.replace("VB","") # remove the "VB" from the price
+        negotiable = True   
+        price = price.replace("VB","") #
 
     # If the price is "Zu verschenken", set it to 0
     if "Zu verschenken" in price:
@@ -62,6 +69,10 @@ for posting in postings:
         # If the price is not "Zu verschenken", cast the String into a double
         price = float(price)
 
+    db.execute("INSERT INTO ScrapedData (SearchText, name, img, url, postDate, description, price, negotiable, datetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (searchText, name, img, url, date, description, price, negotiable, datetime.now()))
 
 
+# Commit the changes and close the connection
+connection.commit() # finalize the changes
+connection.close()
 
