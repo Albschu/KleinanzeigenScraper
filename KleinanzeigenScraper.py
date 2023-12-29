@@ -14,7 +14,7 @@ def Scraper():
     # searchText = input("Enter search term: ").replace(" ", "-")
 
     # this is the search term used for testing
-    searchText = "super mario bros wonder".replace(" ", "-")
+    searchText = "fahrrad".replace(" ", "-")
 
     url = f"https://www.kleinanzeigen.de/s-{searchText}/k0"
 
@@ -52,20 +52,24 @@ def Scraper():
 
         url = "https://www.kleinanzeigen.de/" + posting.find("div", class_="aditem-main--middle").h2.a.get("href")
 
-
         # if imagebox srpimagebox does not exist, the posting does not have an image
         if posting.find("div", class_="imagebox srpimagebox") is not None:
             img = posting.find("div", class_="imagebox srpimagebox").img.get("src")
 
 
+
+
         # Price can have nagotiable in it, so we need to check for that
         if "VB" in price:
             negotiable = True   
-            price = price.replace("VB","") #
+            price = price.replace("VB","") 
+
+        if price == "":
+            price = "0.00"
 
         # If the price is "Zu verschenken", set it to 0
         if "Zu verschenken" in price:
-            price = 0.0
+            price = 0.00
         else:
             # If the price is not "Zu verschenken", cast the String into a double
             price = float(price)
@@ -84,5 +88,7 @@ def Scraper():
 __name__ = "__main__"
 while True:
     Scraper()
-    # waitMinutes = 10            # wait 10 Minutes before scraping again
-    # time.sleep(waitMinutes * 60) 
+    waitMinutes = 10            # wait 10 Minutes before scraping again
+    print(f"sleeping {waitMinutes} minutes")
+    time.sleep(waitMinutes * 60) 
+    print("start Scraping")
