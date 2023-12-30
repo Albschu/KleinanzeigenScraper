@@ -5,16 +5,7 @@ import sqlite3
 from datetime import datetime
 import time
 
-def Scraper():
-    # create a connection to the database
-    connection = sqlite3.connect("data.db")
-    db = connection.cursor()
-
-    # this is the search term that the user will enter
-    # searchText = input("Enter search term: ").replace(" ", "-")
-
-    # this is the search term used for testing
-    searchText = "fahrrad".replace(" ", "-")
+def Scraper(searchText, Scrapetime):
 
     url = f"https://www.kleinanzeigen.de/s-{searchText}/k0"
 
@@ -74,7 +65,25 @@ def Scraper():
             # If the price is not "Zu verschenken", cast the String into a double
             price = float(price)
 
-        db.execute("INSERT INTO ScrapedData (SearchText, name, img, url, postDate, description, price, negotiable, datetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (searchText, name, img, url, date, description, price, negotiable, datetime.now()))
+        db.execute("INSERT INTO ScrapedData (SearchText, name, img, url, postDate, description, price, negotiable, datetime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (searchText, name, img, url, date, description, price, negotiable, Scrapetime))
+
+
+
+
+__name__ = "__main__"
+while True:
+    # create a connection to the database
+    connection = sqlite3.connect("data.db")
+    db = connection.cursor()
+    SearchTerms = db.execute("SELECT * FROM watchlist WHERE active = 1").fetchall()   # get all the searchterms from the database
+    
+    Scrapetime = datetime.now()
+    for SearchTerms in SearchTerms:
+        print("Scraping: " + SearchTerms[1])
+        Scraper(SearchTerms[1], Scrapetime)
+
+
+
 
 
     # Commit the changes and close the connection
@@ -82,13 +91,7 @@ def Scraper():
     connection.close()
 
 
-
-
-
-__name__ = "__main__"
-while True:
-    Scraper()
-    waitMinutes = 10            # wait 10 Minutes before scraping again
+    waitMinutes = 60            # wait 10 Minutes before scraping again
     print(f"sleeping {waitMinutes} minutes")
     time.sleep(waitMinutes * 60) 
-    print("start Scraping")
+    print("start Scraping again")  

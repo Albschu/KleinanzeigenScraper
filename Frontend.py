@@ -1,5 +1,6 @@
+import tkinter as tk 
 from tkinter import *
-import tkinter as tk
+from tkinter import ttk
 from PIL import Image, ImageTk
 import requests
 import sqlite3
@@ -17,11 +18,6 @@ class ScrapedData:
         self.Link = ""
 
     def getData(self, searchText, sort):
-        # connect and link to the database
-        connection = sqlite3.connect("data.db")
-        db = connection.cursor()
-
-        print(sort)
         if sort == "Show cheapest entry":
             que = db.execute(
                 "SELECT * FROM ScrapedData WHERE SearchText = ? AND Price > 0.0 ORDER BY price ASC", [searchText]
@@ -44,7 +40,7 @@ class ScrapedData:
             self.description = que[6]
             self.imgUrl = que[3]
             self.Link = que[4]
-        connection.close()
+        
 
 
 class MyGUI:
@@ -68,13 +64,16 @@ class MyGUI:
         self.grid.columnconfigure(4, weight=1)
 
 
-        # create a text entry box
-        self.Search = tk.Entry(self.grid, text="Search", font=("Helvetica", 20))
-        self.Search.grid(row=0, column=0, columnspan=3, sticky="ew")
+        # create a text entry box, with a dropdown menu
+        self.SearchText = StringVar()
+        self.combobox = ttk.Combobox(self.grid, textvariable=self.SearchText, font=("Helvetica", 20), values = self.getCurrentWatchlist())
+        self.combobox.grid(row=0, column=0, columnspan=3, sticky="ew")
+
+
 
 
         # create a button
-        self.btn2 = tk.Button(self.grid, text="Add to Watchlist")
+        self.btn2 = tk.Button(self.grid, text="Add to Watchlist", command=self.addToWatchlist)
         self.btn2.grid(row=0, column=3, sticky="ewns", padx=10, pady=1)
 
 
@@ -92,22 +91,24 @@ class MyGUI:
         self.drop.grid(row=0, column=4, sticky="ewns", padx=10)
 
 
-        # self.ScrapedData.getData("super-mario-bros-wonder", "cheapest")
-
-        self.showScrapedData()
-
-
-
         self.grid.pack(fill = "x", padx=10)  # This adds the grid to the window (we add the widgets to the grid and then add the grid to the window)
         self.root.mainloop()     # This call makes sure the window stays open until the user closes it.
 
+
+    def getCurrentWatchlist(self):
+        list = db.execute("SELECT searchterm FROM watchlist WHERE active = 1").fetchall()
+        data = []
+        for row in list:
+            data.append(row[0])
+        return data
+
     def addToWatchlist(self, *args):
-        print("Add to Watchlist")
-        
+        Searchterm = self.SearchText.get()
+        x = db.execute("INSERT INTO watchlist (searchterm, active) VALUES (?, ?)", (Searchterm, 1))          # 1 represents true        
 
     def showScrapedData(self, *args):
 
-        self.ScrapedData.getData("super-mario-bros-wonder", self.OptionSelect.get())
+        self.ScrapedData.getData(self.combobox.get(), self.OptionSelect.get())
         # add a picture
         self.imageUrl = self.ScrapedData.imgUrl        # This is the image url
         self.original = Image.open(requests.get(self.imageUrl, stream=True).raw)
@@ -141,5 +142,8 @@ class MyGUI:
 
 
 if __name__ == "__main__":
+    connection = sqlite3.connect("data.db")
+    db = connection.cursor()
     MyGUI()
-
+    connection.commit()
+    connection.close()
