@@ -78,6 +78,11 @@ while True:
     SearchTerms = db.execute("SELECT * FROM watchlist WHERE active = 1").fetchall()   # get all the searchterms from the database
     
     Scrapetime = datetime.now()
+    # Tm = datetime.now().strftime("%H:%M")
+    # dt = datetime.date(datetime.now())
+
+    
+
     for SearchTerms in SearchTerms:
         print("Scraping: " + SearchTerms[1])
         Scraper(SearchTerms[1], Scrapetime)

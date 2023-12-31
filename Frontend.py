@@ -6,6 +6,12 @@ import requests
 import sqlite3
 import webbrowser
 
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from datetime import datetime
+
 
 class ScrapedData:
     def __init__(self):
@@ -91,7 +97,13 @@ class MyGUI:
         self.drop.grid(row=0, column=4, sticky="ewns", padx=10)
 
 
+
+
+
+
         self.grid.pack(fill = "x", padx=10)  # This adds the grid to the window (we add the widgets to the grid and then add the grid to the window)
+
+
         self.root.mainloop()     # This call makes sure the window stays open until the user closes it.
 
 
@@ -134,6 +146,37 @@ class MyGUI:
         self.Linkbtn = tk.Button(self.grid, text="Open in Browser", command=lambda: webbrowser.open(self.ScrapedData.Link))     # lambda, because commdand normally only passes a function name, not a function call
         self.Linkbtn.grid(row=2, column=2, sticky="ewns", padx=10, pady=10)
 
+        rawData = db.execute("SELECT AVG(Price), datetime FROM ScrapedData WHERE searchText = ? GROUP BY datetime", [self.combobox.get()]).fetchall()
+        data = {'Date': [], 'MedianPrice': [], 'Time': []}
+        for row in rawData:
+            data["MedianPrice"].append(row[0])
+            # Convert the string to a datetime object
+            datetime_obj = datetime.strptime(row[1], '%Y-%m-%d %H:%M:%S.%f')
+
+            # Extract the date and time
+            date = datetime_obj.date()
+            time = datetime_obj.time().strftime('%H:%M:%S')
+
+            data["Date"].append(date)
+            data["Time"].append(time)
+  
+
+        dataframe = pd.DataFrame(data)
+        # Creates a new figure - a container for the actual plot
+        # Figsize is width/height in inches
+        figure = plt.Figure(figsize=(5, 4), dpi=100)
+        # Adds an axes to the figure
+        # Input is number of rows, number of cols, index position
+        # Assumes a grid layout
+        figure_plot = figure.add_subplot(1, 1, 1)
+        figure_plot.set_ylabel('Unemployment Rate')
+        # Place figure on main window
+        line = FigureCanvasTkAgg(figure, self.root)
+        # get_tk_widget
+        line.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH)
+        dataframe = dataframe[['Date', 'MedianPrice']].groupby('Date').sum()
+        dataframe.plot(kind='line', legend=True, ax=figure_plot, color='r', marker='o', fontsize=10)
+        figure_plot.set_title(f'Median Price')
 
 
 
